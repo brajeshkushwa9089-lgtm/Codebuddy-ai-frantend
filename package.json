@@ -1,0 +1,13 @@
+{
+  "name": "codebuddy-ai",
+  "version": "1.0.0",
+  "private": true,
+  "description": "CodeBuddy AI - Educational programming companion for Python, C, C++, and JavaScript",
+  "scripts": {
+    "dev": "npm run dev --prefix frontend",
+    "dev:backend": "npm run dev --prefix backend",
+    "start": "npm start --prefix backend",
+    "build": "npm run build --prefix frontend",
+    "test": "npm test --prefix backend"
+  }
+}
