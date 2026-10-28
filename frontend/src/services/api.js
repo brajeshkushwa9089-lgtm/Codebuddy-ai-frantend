@@ -16,7 +16,12 @@ const getBaseURL = () => {
     }
   }
 
-  // 3. Default to configured envUrl or localhost
+  // 3. If running over HTTPS in production (e.g. Vercel), NEVER make insecure HTTP calls
+  if (typeof window !== 'undefined' && window.location && window.location.protocol === 'https:') {
+    return envUrl || '/api';
+  }
+
+  // 4. Default to configured envUrl or local development
   return envUrl || 'http://localhost:5000/api';
 };
 
