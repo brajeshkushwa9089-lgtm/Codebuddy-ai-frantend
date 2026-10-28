@@ -48,7 +48,8 @@ export default function TutorChatPage() {
     try {
       setLoading(true);
       const res = await api.get('/conversations');
-      const list = res?.data?.conversations || [];
+      const rawList = res?.data?.conversations || [];
+      const list = Array.isArray(rawList) ? rawList.filter((c) => Boolean(c && c.id)) : [];
       setConversations(list);
       if (list.length > 0 && !activeConversationId) {
         selectConversation(list[0].id);
@@ -61,11 +62,13 @@ export default function TutorChatPage() {
   };
 
   const selectConversation = async (id) => {
+    if (!id) return;
     setActiveConversationId(id);
     setError('');
     try {
       const res = await api.get(`/conversations/${id}`);
-      setMessages(res?.data?.messages || []);
+      const rawMsgs = res?.data?.messages || [];
+      setMessages(Array.isArray(rawMsgs) ? rawMsgs.filter((m) => Boolean(m && m.content)) : []);
       if (res?.data?.conversation?.language) {
         setLanguage(res.data.conversation.language);
       }
@@ -81,8 +84,8 @@ export default function TutorChatPage() {
         language,
       });
       const newConvo = res?.data?.conversation;
-      if (newConvo) {
-        setConversations([newConvo, ...conversations]);
+      if (newConvo && newConvo.id) {
+        setConversations((prev) => [newConvo, ...(prev || []).filter((c) => Boolean(c && c.id))]);
         setActiveConversationId(newConvo.id);
         setMessages([]);
       }
@@ -95,7 +98,7 @@ export default function TutorChatPage() {
     e.stopPropagation();
     try {
       await api.delete(`/conversations/${id}`);
-      const remaining = conversations.filter((c) => c.id !== id);
+      const remaining = (conversations || []).filter((c) => Boolean(c && c.id && c.id !== id));
       setConversations(remaining);
       if (activeConversationId === id) {
         if (remaining.length > 0) {
@@ -112,16 +115,19 @@ export default function TutorChatPage() {
 
   const handleStartRename = (convo, e) => {
     e.stopPropagation();
+    if (!convo || !convo.id) return;
     setEditingId(convo.id);
-    setEditTitle(convo.title);
+    setEditTitle(convo.title || '');
   };
 
   const handleSaveRename = async (id, e) => {
     e.stopPropagation();
     try {
       await api.patch(`/conversations/${id}`, { title: editTitle });
-      setConversations(
-        conversations.map((c) => (c.id === id ? { ...c, title: editTitle } : c))
+      setConversations((prev) =>
+        (prev || [])
+          .filter((c) => Boolean(c && c.id))
+          .map((c) => (c.id === id ? { ...c, title: editTitle } : c))
       );
       setEditingId(null);
     } catch (err) {
@@ -230,13 +236,15 @@ export default function TutorChatPage() {
           </button>
 
           <div className="flex-1 overflow-y-auto space-y-1 pr-1">
-            {conversations.map((convo) => {
-              const isActive = convo.id === activeConversationId;
-              const isEditing = editingId === convo.id;
+            {(conversations || [])
+              .filter((convo) => Boolean(convo && convo.id))
+              .map((convo) => {
+                const isActive = convo.id === activeConversationId;
+                const isEditing = editingId === convo.id;
 
-              return (
-                <div
-                  key={convo.id}
+                return (
+                  <div
+                    key={convo.id}
                   onClick={() => selectConversation(convo.id)}
                   className={`group flex items-center justify-between p-2.5 rounded-xl text-xs cursor-pointer transition-all ${
                     isActive
@@ -331,8 +339,10 @@ export default function TutorChatPage() {
                 </div>
               </div>
             ) : (
-              messages.map((m, idx) => {
-                const isAssistant = m.role === 'assistant';
+              (messages || [])
+                .filter((m) => Boolean(m && m.content))
+                .map((m, idx) => {
+                  const isAssistant = m.role === 'assistant';
                 return (
                   <div
                     key={m.id || idx}
