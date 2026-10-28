@@ -53,11 +53,13 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response.data,
   (error) => {
-    const errorData = error.response?.data?.error;
-    const message = errorData?.message || error.message || 'Network request failed';
+    let message = error.response?.data?.error?.message || error.message || 'Network request failed';
+    if (error.response?.status === 405) {
+      message = 'Backend API is not configured on Vercel. Please set VITE_API_BASE_URL to your Render backend URL in Vercel Environment Variables.';
+    }
     const customError = new Error(message);
     customError.statusCode = error.response?.status;
-    customError.details = errorData?.details;
+    customError.details = error.response?.data?.error?.details;
     return Promise.reject(customError);
   }
 );
