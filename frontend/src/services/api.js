@@ -16,9 +16,9 @@ const getBaseURL = () => {
     }
   }
 
-  // 3. If running over HTTPS in production (e.g. Vercel), NEVER make insecure HTTP calls
+  // 3. If running over HTTPS in production (e.g. Vercel), use configured URL or Render backend
   if (typeof window !== 'undefined' && window.location && window.location.protocol === 'https:') {
-    return envUrl || '/api';
+    return envUrl || 'https://codebuddy-ai-backend-s8m7.onrender.com/api';
   }
 
   // 4. Default to configured envUrl or local development
