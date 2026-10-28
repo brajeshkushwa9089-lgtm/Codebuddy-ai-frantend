@@ -30,6 +30,22 @@ export function AIProviderProvider({ children }) {
     }
   };
 
+  const switchProvider = async (target) => {
+    try {
+      setLoading(true);
+      const nextProvider = target || (providerInfo.provider === 'ollama' ? 'gemini' : 'ollama');
+      const res = await api.post('/ai/switch', { provider: nextProvider });
+      setProviderInfo(res);
+      return res;
+    } catch (err) {
+      console.error('Failed to switch AI provider', err);
+      // Fallback probe
+      await checkHealth();
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     checkHealth();
     // Re-check every 60 seconds
@@ -38,7 +54,7 @@ export function AIProviderProvider({ children }) {
   }, []);
 
   return (
-    <AIProviderContext.Provider value={{ providerInfo, loading, checkHealth }}>
+    <AIProviderContext.Provider value={{ providerInfo, loading, checkHealth, switchProvider }}>
       {children}
     </AIProviderContext.Provider>
   );
