@@ -12,24 +12,27 @@ export function AuthProvider({ children }) {
   const [profile, setProfile] = useState(null);
 
   useEffect(() => {
-    // Check local storage for mock session if Supabase is unconfigured
-    if (!isSupabaseConfigured) {
-      const savedMockUser = localStorage.getItem('codebuddy_mock_user');
-      if (savedMockUser) {
-        try {
-          const parsed = JSON.parse(savedMockUser);
-          setUser(parsed);
-          setProfile({ displayName: parsed.displayName || 'Demo Student' });
-          setTokenGetter(() => `test-mock-token-${parsed.id}`);
-        } catch {
-          // ignore parse error
-        }
+    // 1. Check local storage for mock / offline session first
+    const savedMockUser = localStorage.getItem('codebuddy_mock_user');
+    if (savedMockUser) {
+      try {
+        const parsed = JSON.parse(savedMockUser);
+        setUser(parsed);
+        setProfile({ displayName: parsed.displayName || 'Demo Student' });
+        setTokenGetter(() => `test-mock-token-${parsed.id}`);
+        setLoading(false);
+        return;
+      } catch {
+        // ignore parse error
       }
+    }
+
+    if (!isSupabaseConfigured) {
       setLoading(false);
       return;
     }
 
-    // Live Supabase Auth
+    // 2. Live Supabase Auth
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
@@ -68,8 +71,21 @@ export function AuthProvider({ children }) {
   };
 
   const login = async (email, password) => {
+    // 1. If demo student account or currently offline, use immediate local offline session
+    if (email === 'student@codebuddy.local' || (typeof navigator !== 'undefined' && !navigator.onLine)) {
+      const mockUser = {
+        id: 'demo-student-id',
+        email,
+        displayName: 'Demo Student',
+      };
+      localStorage.setItem('codebuddy_mock_user', JSON.stringify(mockUser));
+      setUser(mockUser);
+      setProfile({ displayName: mockUser.displayName });
+      setTokenGetter(() => `test-mock-token-${mockUser.id}`);
+      return { user: mockUser };
+    }
+
     if (!isSupabaseConfigured) {
-      // Demo mock login
       const mockUser = {
         id: 'demo-student-id',
         email,
@@ -82,12 +98,29 @@ export function AuthProvider({ children }) {
       return { user: mockUser };
     }
 
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-    if (error) throw error;
-    return data;
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      if (error) throw error;
+      return data;
+    } catch (err) {
+      // If network call failed (offline), gracefully fall back to local offline session
+      if (err.message?.includes('fetch') || err.message?.includes('NetworkError') || (typeof navigator !== 'undefined' && !navigator.onLine)) {
+        const mockUser = {
+          id: 'offline-' + email.replace(/[^a-zA-Z0-9]/g, ''),
+          email,
+          displayName: email.split('@')[0],
+        };
+        localStorage.setItem('codebuddy_mock_user', JSON.stringify(mockUser));
+        setUser(mockUser);
+        setProfile({ displayName: mockUser.displayName });
+        setTokenGetter(() => `test-mock-token-${mockUser.id}`);
+        return { user: mockUser };
+      }
+      throw err;
+    }
   };
 
   const register = async (email, password, displayName) => {
@@ -116,16 +149,17 @@ export function AuthProvider({ children }) {
   };
 
   const logout = async () => {
-    if (!isSupabaseConfigured) {
-      localStorage.removeItem('codebuddy_mock_user');
-      setUser(null);
-      setProfile(null);
-      setTokenGetter(() => null);
-      return;
+    localStorage.removeItem('codebuddy_mock_user');
+    if (isSupabaseConfigured) {
+      try {
+        await supabase.auth.signOut();
+      } catch {
+        // ignore offline signout error
+      }
     }
-    await supabase.auth.signOut();
     setUser(null);
     setProfile(null);
+    setTokenGetter(() => null);
   };
 
   const updateProfile = async (displayName) => {
