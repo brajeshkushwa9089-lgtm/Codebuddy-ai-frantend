@@ -8,6 +8,26 @@ export default {
   theme: {
     extend: {
       colors: {
+        jet: '#05070D',
+        navy: {
+          DEFAULT: '#0B1220',
+          card: '#0B1220',
+          panel: '#0E172A',
+          border: '#1E293B',
+          hover: '#162238',
+        },
+        cerulean: {
+          DEFAULT: '#00BFFF',
+          light: '#38D1FF',
+          dark: '#0095CC',
+          glow: 'rgba(0, 191, 255, 0.35)',
+        },
+        neonRose: {
+          DEFAULT: '#FF2DAA',
+          light: '#FF5CBF',
+          dark: '#D9168C',
+          glow: 'rgba(255, 45, 170, 0.35)',
+        },
         brand: {
           50: '#eef2ff',
           100: '#e0e7ff',
@@ -22,18 +42,24 @@ export default {
           950: '#1e1b4b',
         },
         dark: {
-          bg: '#0a0d14',
-          surface: '#111726',
-          card: '#161e31',
-          border: '#1f293d',
-          hover: '#243048'
-        }
+          bg: '#05070D',
+          surface: '#0B1220',
+          card: '#0B1220',
+          border: '#1E293B',
+          hover: '#162238',
+        },
       },
       fontFamily: {
-        mono: ['JetBrains Mono', 'Fira Code', 'Consolas', 'monospace']
-      }
+        sans: ['Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+        mono: ['JetBrains Mono', 'Fira Code', 'Consolas', 'monospace'],
+      },
+      boxShadow: {
+        'glow-cerulean': '0 0 25px -4px rgba(0, 191, 255, 0.35)',
+        'glow-rose': '0 0 25px -4px rgba(255, 45, 170, 0.35)',
+        'glow-dual': '0 0 35px -5px rgba(0, 191, 255, 0.25), 0 0 35px -5px rgba(255, 45, 170, 0.2)',
+        'glow-card': '0 20px 50px rgba(0, 0, 0, 0.7), 0 0 40px -10px rgba(0, 191, 255, 0.15)',
+      },
     },
   },
   plugins: [],
 }
-

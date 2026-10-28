@@ -4,8 +4,9 @@
 
 @layer base {
   body {
-    @apply bg-[#0a0d14] text-slate-100 font-sans antialiased;
+    @apply bg-jet text-slate-100 font-sans antialiased;
     color-scheme: dark;
+    background-color: #05070D;
   }
 }
 
@@ -16,22 +17,45 @@
 }
 
 ::-webkit-scrollbar-track {
-  background: #0a0d14;
+  background: #05070D;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #1f293d;
+  background: #1E293B;
   border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #374151;
+  background: #334155;
+}
+
+/* Glassmorphism & Neon Glow Utilities */
+.glass-panel {
+  background: rgba(11, 18, 32, 0.78);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(30, 41, 59, 0.7);
+}
+
+.glow-cerulean-sm {
+  box-shadow: 0 0 16px -2px rgba(0, 191, 255, 0.35);
+}
+
+.glow-rose-sm {
+  box-shadow: 0 0 16px -2px rgba(255, 45, 170, 0.35);
+}
+
+.glow-dual-card {
+  box-shadow: 
+    0 24px 60px -12px rgba(5, 7, 13, 0.9),
+    0 0 35px -8px rgba(0, 191, 255, 0.18),
+    0 0 35px -8px rgba(255, 45, 170, 0.12);
 }
 
 @keyframes fadeIn {
   from {
     opacity: 0;
-    transform: translateY(4px);
+    transform: translateY(6px);
   }
   to {
     opacity: 1;
@@ -39,7 +63,21 @@
   }
 }
 
-.animate-fadeIn {
-  animation: fadeIn 0.25s ease-out forwards;
+@keyframes pulseGlow {
+  0%, 100% {
+    opacity: 0.35;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.6;
+    transform: scale(1.03);
+  }
 }
 
+.animate-fadeIn {
+  animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-pulseGlow {
+  animation: pulseGlow 6s ease-in-out infinite;
+}
